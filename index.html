@@ -23,7 +23,7 @@ dialog{border:0;border-radius:17px;box-shadow:0 22px 80px #1b37465c;padding:0;wi
 <script>
 'use strict';
 // Výsledky podle klíče k pracovnímu listu. Úloha 3 včetně hran; úloha 5 bez víka.
-const answers=['4980','1700','10,356','10,8','27,75','138','400','84','80','280','184','148','470','18','630','81','32','54'];
+const answers=['4980','1700','10,356','10,8','31,5','138','400','84','80','280','184','148','470','18','630','81','32','54'];
 const key='povrch_hranolu_18_v1';
 let state;
 try { const raw=JSON.parse(localStorage.getItem(key)||'[]'); state=answers.map((_,i)=>['new','wrong','correct','revealed'].includes(raw[i])?raw[i]:'new'); } catch {state=answers.map(()=> 'new');}
