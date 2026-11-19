@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Povrch hranolu – kontrola výsledků</title>
+<title>Objem hranolu – kontrola výsledků</title>
 <style>
 :root{--ink:#152b43;--blue:#185a86;--line:#cbd7df;--bg:#f5f8fa;--green:#d9f2df;--greenline:#318a55;--orange:#fff0d4;--orangeline:#d88915;--red:#fbdede;--redline:#c43c43}
 *{box-sizing:border-box}body{margin:0;font-family:Calibri,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink)}
@@ -13,7 +13,7 @@ dialog{border:0;border-radius:17px;box-shadow:0 22px 80px #1b37465c;padding:0;wi
 </head>
 <body>
 <main>
-<header><h1>Povrch hranolů</h1><p>Kontrola výsledků pracovního listu. Vyberte číslo úlohy, zadejte pouze číselný výsledek bez jednotek a ověřte ho. U desetinných výsledků se uznává i zaokrouhlení na celé číslo.</p></header>
+<header><h1>Objem hranolu</h1><p>Kontrola výsledků pracovního listu. Vyberte číslo úlohy, zadejte pouze číselný výsledek bez jednotek a ověřte ho. Desetinná čísla pište s <strong>čárkou</strong>. U desetinných výsledků se uznává i zaokrouhlení na celé číslo dolů nebo nahoru.</p></header>
 <div class="summary"><div class="counts" aria-live="polite" id="counts"></div><button class="reset" id="reset" type="button">Začít znovu</button></div>
 <div class="grid" id="grid"></div>
 <div class="legend"><span><i class="dot green"></i>Správná odpověď</span><span><i class="dot orange"></i>Nesprávná odpověď</span><span><i class="dot red"></i>Zobrazený výsledek</span></div>
@@ -22,21 +22,21 @@ dialog{border:0;border-radius:17px;box-shadow:0 22px 80px #1b37465c;padding:0;wi
 <dialog id="dialog" aria-labelledby="heading"><div class="modal"><div class="modal-head"><h2 id="heading"></h2><button type="button" class="close" id="close" aria-label="Zavřít">×</button></div><div id="content"></div></div></dialog>
 <script>
 'use strict';
-// Výsledky podle klíče k pracovnímu listu. Úloha 3 včetně hran; úloha 5 bez víka.
-const answers=['4980','1700','10,356','10,8','31,5','138','400','84','80','280','184','148','470','18','630','81','32','54'];
-const key='povrch_hranolu_18_v1';
+// Výsledky pracovního listu Objem hranolu.
+const answers=['10','120','8','12','144','140','2,5','42','192','80','36','49,375'];
+const key='objem_hranolu_12_v2';
 let state;
 try { const raw=JSON.parse(localStorage.getItem(key)||'[]'); state=answers.map((_,i)=>['new','wrong','correct','revealed'].includes(raw[i])?raw[i]:'new'); } catch {state=answers.map(()=> 'new');}
 const grid=document.getElementById('grid'),counts=document.getElementById('counts'),dialog=document.getElementById('dialog'),heading=document.getElementById('heading'),content=document.getElementById('content');
 let active=0;
 const titles={new:'Zadat výsledek',wrong:'Zkusit znovu',correct:'Správně',revealed:'Výsledek odkryt'};
 function save(){try{localStorage.setItem(key,JSON.stringify(state))}catch{}}
-function render(){grid.replaceChildren();state.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='tile '+(s==='new'?'':s);b.setAttribute('aria-label',`Úloha ${i+1}: ${titles[s]}`);b.innerHTML=`<span class="number">${i+1}</span><span class="tile-status">${s==='new'?'Zatím neřešeno':s==='wrong'?'Zkuste znovu':s==='correct'?'✓ Správně':'Výsledek zobrazen'}</span>`;b.addEventListener('click',()=>openTask(i));grid.appendChild(b)});let n=state.filter(s=>s==='correct').length, r=state.filter(s=>s==='revealed').length;counts.innerHTML=`<strong>${n}</strong> správně &nbsp;·&nbsp; <strong>${r}</strong> odkrytých &nbsp;·&nbsp; <strong>${18-n-r}</strong> zbývá`;}
+function render(){grid.replaceChildren();state.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.className='tile '+(s==='new'?'':s);b.setAttribute('aria-label',`Úloha ${i+1}: ${titles[s]}`);b.innerHTML=`<span class="number">${i+1}</span><span class="tile-status">${s==='new'?'Zatím neřešeno':s==='wrong'?'Zkuste znovu':s==='correct'?'✓ Správně':'Výsledek zobrazen'}</span>`;b.addEventListener('click',()=>openTask(i));grid.appendChild(b)});let n=state.filter(s=>s==='correct').length, r=state.filter(s=>s==='revealed').length;counts.innerHTML=`<strong>${n}</strong> správně &nbsp;·&nbsp; <strong>${r}</strong> odkrytých &nbsp;·&nbsp; <strong>${answers.length-n-r}</strong> zbývá`;}
 function normalize(v){if(!/^\s*[+-]?(?:\d+(?:[,.]\d+)?|[,.]\d+)\s*$/.test(v))return null;return Number(v.trim().replace(',','.'));}
 function isCorrect(value, answer){const expected=Number(answer.replace(',','.'));return Math.abs(value-expected)<1e-9 || (!Number.isInteger(expected) && (value===Math.floor(expected) || value===Math.ceil(expected)));}
 function openTask(i){active=i;heading.textContent='Úloha '+(i+1);paintContent();dialog.showModal();const inp=document.getElementById('answer');if(inp)inp.focus();}
-function paintContent(message=''){const status=state[active];const answer=answers[active];if(status==='correct'){content.innerHTML=`<p class="prompt">Tuto úlohu jste vyřešili správně.</p><p class="show-answer">${answer}</p><div class="actions"><button type="button" class="action secondary" id="done">Zavřít</button></div>`;document.getElementById('done').onclick=()=>dialog.close();return;}
-if(status==='revealed'){content.innerHTML=`<p class="prompt">Nechali jste si zobrazit výsledek.</p><p class="show-answer">${answer}</p><div class="actions"><button type="button" class="action secondary" id="done">Zavřít</button></div>`;document.getElementById('done').onclick=()=>dialog.close();return;}
+function paintContent(message=''){const status=state[active];const answer=answers[active];const shownAnswer=answer;if(status==='correct'){content.innerHTML=`<p class="prompt">Tuto úlohu jste vyřešili správně.</p><p class="show-answer">${shownAnswer}</p><div class="actions"><button type="button" class="action secondary" id="done">Zavřít</button></div>`;document.getElementById('done').onclick=()=>dialog.close();return;}
+if(status==='revealed'){content.innerHTML=`<p class="prompt">Nechali jste si zobrazit výsledek.</p><p class="show-answer">${shownAnswer}</p><div class="actions"><button type="button" class="action secondary" id="done">Zavřít</button></div>`;document.getElementById('done').onclick=()=>dialog.close();return;}
 content.innerHTML=`<p class="prompt">Zadejte výsledek příkladu č. ${active+1}.</p><form id="answerform" novalidate><label class="input-label" for="answer">Váš výsledek</label><input class="answer" id="answer" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="Např. 12,5" aria-describedby="hint feedback"><p class="hint" id="hint">Pouze číslo bez jednotek, s desetinnou čárkou nebo tečkou.</p><div id="feedback" class="feedback ${status==='wrong'?'error':''}" role="status">${status==='wrong'?'Poslední odpověď nebyla správná. Můžete to zkusit znovu.':''}</div><div class="actions"><button class="action primary" type="submit">Zkontrolovat</button><button class="action secondary" type="button" id="dismiss">Zavřít</button>${status==='wrong'?'<button class="action danger" type="button" id="reveal">Ukázat výsledek</button>':''}</div></form>`;
 document.getElementById('dismiss').onclick=()=>dialog.close();document.getElementById('answerform').onsubmit=(event)=>{event.preventDefault();const inp=document.getElementById('answer');const val=normalize(inp.value);const f=document.getElementById('feedback');if(val===null){f.className='feedback error';f.textContent='Zadejte platné číslo. Desetinná čísla zapisujte čárkou nebo tečkou.';inp.focus();return;}if(isCorrect(val,answer)){state[active]='correct';save();render();paintContent();}else{state[active]='wrong';save();render();paintContent();document.getElementById('answer').focus();}};
 const reveal=document.getElementById('reveal');if(reveal)reveal.onclick=()=>{state[active]='revealed';save();render();paintContent();};}
